@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NDFC Countdown</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0A1740; --navy-soft:#1B2C63; --red:#C8102E; --red-dark:#8E0B21;
+  --gold:#D4AF37; --white:#fff; --cream:#F7F6F1; --ink:#14141C;
+  --ink-soft:rgba(20,20,28,.62);
+  --font-display:'Anton','Arial Narrow',sans-serif;
+  --font-body:'Manrope',-apple-system,sans-serif;
+  --font-accent:'Space Grotesk','Manrope',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#1a1a1a}
+.canvas{position:relative;width:1080px;height:1920px;overflow:hidden;background:var(--white);
+  font-family:var(--font-body);color:var(--ink);margin:0 auto;display:flex;flex-direction:column}
+.pitch-texture{position:absolute;inset:0;pointer-events:none;
+  background-image:repeating-linear-gradient(-35deg,rgba(10,23,64,.025) 0 60px,transparent 60px 120px)}
+.corner-accents{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
+.watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:760px;opacity:.045;pointer-events:none}
+
+/* header */
+.header{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;padding-top:48px}
+.header-logo{cursor:pointer;width:150px;height:auto;margin-bottom:10px}
+.mono{cursor:pointer;width:150px;height:150px;border-radius:50%;background:var(--navy);color:#fff;border:4px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:38px;letter-spacing:2px;margin-bottom:10px}
+.club-name{font-family:var(--font-accent);font-weight:700;font-size:21px;letter-spacing:5px;color:var(--navy);text-transform:uppercase}
+.club-sub{margin-top:4px;font-family:var(--font-accent);font-weight:500;font-size:11px;letter-spacing:2.5px;color:var(--ink-soft);text-transform:uppercase}
+
+/* headline */
+.headline-zone{position:relative;z-index:2;text-align:center;padding:40px 60px 0}
+.event-type{display:inline-flex;align-items:center;gap:14px;font-family:var(--font-accent);font-weight:700;font-size:28px;
+  letter-spacing:4px;color:var(--red);text-transform:uppercase;white-space:nowrap}
+.event-type .ann{color:var(--navy)}
+.event-type::before,.event-type::after{content:"";width:40px;height:4px;background:var(--red)}
+#headlineEl{margin-top:20px;font-family:var(--font-display);line-height:1.1;color:var(--navy);text-transform:uppercase;letter-spacing:1px}
+#headlineEl .h-line{display:block;white-space:nowrap}
+#headlineEl .h-line.accent{color:var(--red)}
+.season-pill{display:inline-block;margin-top:22px;padding:8px 34px;border:3px solid var(--gold);border-radius:999px;
+  background:rgba(212,175,55,.12);font-family:var(--font-display);font-size:38px;letter-spacing:2px;color:var(--navy);text-transform:uppercase}
+
+/* countdown */
+.count-wrap{position:relative;z-index:2;margin:36px 60px 0}
+.count-card{position:relative;background:var(--navy);border-radius:18px;padding:44px 40px 0;text-align:center;overflow:hidden;
+  box-shadow:0 26px 46px -18px rgba(10,23,64,.6)}
+.count-card::before{content:"";position:absolute;left:50%;top:50%;width:640px;height:640px;transform:translate(-50%,-56%);
+  border:3px solid rgba(255,255,255,.08);border-radius:50%}
+.count-card::after{content:"";position:absolute;left:0;right:0;top:50%;height:3px;background:rgba(255,255,255,.07);transform:translateY(-130%)}
+.count-top{position:relative;font-family:var(--font-accent);font-weight:700;font-size:26px;letter-spacing:8px;color:var(--gold);text-transform:uppercase}
+#countNum{position:relative;font-family:var(--font-display);font-size:390px;line-height:1;color:var(--white);margin-top:6px;
+  text-shadow:0 10px 0 var(--red),0 18px 40px rgba(0,0,0,.35);letter-spacing:4px}
+.count-banner{position:relative;margin:6px -40px 0;padding:26px 0 30px;background:linear-gradient(90deg,var(--red-dark),var(--red) 30%,var(--red) 70%,var(--red-dark));
+  font-family:var(--font-display);font-size:92px;letter-spacing:10px;color:#fff;text-transform:uppercase;line-height:1}
+.ticks{display:flex;justify-content:center;gap:8px;margin-top:22px}
+.tick{width:30px;height:12px;border-radius:6px;background:rgba(10,23,64,.14)}
+.tick.on{background:var(--red)}
+.tick.now{background:var(--gold)}
+.ticks-label{margin-top:10px;text-align:center;font-family:var(--font-accent);font-weight:600;font-size:14px;letter-spacing:3px;color:var(--ink-soft);text-transform:uppercase}
+
+/* register CTA */
+.cta{position:relative;z-index:2;margin:34px 60px 0;display:flex;align-items:center;justify-content:center;gap:26px;padding:20px 30px;
+  border-radius:14px;background:linear-gradient(135deg,#E3C25A,var(--gold) 45%,#B8921A);border:4px solid var(--navy);
+  box-shadow:0 14px 0 -6px var(--navy),0 22px 30px -12px rgba(10,23,64,.45)}
+.cta svg{flex:0 0 auto;width:62px;height:62px}
+.cta-title{font-family:var(--font-display);font-size:60px;letter-spacing:3px;color:var(--navy);text-transform:uppercase;line-height:1}
+.cta-sub{margin-top:8px;font-family:var(--font-accent);font-weight:700;font-size:23px;letter-spacing:3px;color:var(--navy);text-transform:uppercase}
+.cta-text{text-align:left}
+
+/* info chips */
+.info{position:relative;z-index:2;margin:26px 60px 0;display:flex;gap:20px}
+.chip{flex:1;display:flex;align-items:center;gap:18px;padding:26px 28px;border-radius:12px;background:var(--cream);border:2px solid rgba(10,23,64,.12)}
+.chip svg{flex:0 0 auto;width:44px;height:44px}
+.chip-label{font-family:var(--font-accent);font-weight:600;font-size:12px;letter-spacing:2.5px;color:var(--ink-soft);text-transform:uppercase}
+.chip-value{font-weight:800;font-size:30px;line-height:1.15;color:var(--navy);margin-top:3px}
+.chip-value.tbd{color:#B8921A}
+
+/* footer */
+.footer{position:relative;z-index:2;margin-top:auto;text-align:center;padding:26px 60px 64px}
+.footer-divider{height:1px;background:linear-gradient(90deg,transparent,var(--gold) 20%,var(--gold) 80%,transparent);opacity:.6;margin-bottom:24px}
+.footer-tagline{font-family:var(--font-accent);font-weight:700;font-size:14px;letter-spacing:3px;color:var(--navy);text-transform:uppercase}
+.footer-tagline .dot{color:var(--red);margin:0 10px}
+.footer-handle{margin-top:8px;font-weight:600;font-size:13px;color:var(--ink-soft)}
+</style>
+</head>
+<body>
+<div class="canvas">
+  <div class="pitch-texture"></div>
+  <svg class="corner-accents" viewBox="0 0 1080 1920" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="rb" x="-30%" y="-30%" width="160%" height="160%"><feTurbulence type="fractalNoise" baseFrequency="0.010 0.014" numOctaves="2" seed="9" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="34" xChannelSelector="R" yChannelSelector="G"/></filter>
+      <filter id="rr" x="-30%" y="-30%" width="160%" height="160%"><feTurbulence type="fractalNoise" baseFrequency="0.011 0.016" numOctaves="2" seed="15" result="n2"/><feDisplacementMap in="SourceGraphic" in2="n2" scale="30" xChannelSelector="R" yChannelSelector="G"/></filter>
+    </defs>
+    <polygon points="0,0 260,0 0,240" fill="#12169C" opacity="0.12" filter="url(#rb)"/>
+    <polygon points="1080,0 1080,260 820,0" fill="#C8102E" opacity="0.12" filter="url(#rr)"/>
+    <polygon points="0,1920 0,1680 260,1920" fill="#C8102E" opacity="0.11" filter="url(#rr)"/>
+    <polygon points="1080,1920 1080,1670 820,1920" fill="#12169C" opacity="0.11" filter="url(#rb)"/>
+  </svg>
+  <img class="watermark" id="wmEl" alt="" style="display:none">
+
+  <div class="header">
+    <img class="header-logo" id="logoEl" alt="Nepal Dallas FC logo" style="display:none">
+    <div class="mono" id="monoEl">NDFC</div>
+    <div class="club-name">Nepal Dallas FC</div>
+    <div class="club-sub">Estd. 2022 &nbsp;·&nbsp; Dallas, Texas</div>
+  </div>
+
+  <div class="headline-zone">
+    <div class="event-type" id="eventTypeEl"></div>
+    <div id="headlineEl"></div>
+    <div class="season-pill" id="seasonEl"></div>
+  </div>
+
+  <div class="count-wrap">
+    <div class="count-card">
+      <div class="count-top" id="topEl">The Wait Is Almost Over</div>
+      <div id="countNum">00</div>
+      <div class="count-banner" id="bannerEl">Days to go</div>
+    </div>
+    <div class="ticks" id="ticksEl"></div>
+    <div class="ticks-label" id="ticksLabelEl"></div>
+  </div>
+
+  <div class="cta">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#0A1740" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 7-7"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>
+    <div class="cta-text"><div class="cta-title" id="ctaTitleEl"></div><div class="cta-sub" id="ctaSubEl"></div></div>
+  </div>
+
+  <div class="info">
+    <div class="chip">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#C8102E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+      <div><div class="chip-label">Date</div><div class="chip-value" id="dateEl"></div></div>
+    </div>
+    <div class="chip">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#C8102E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
+      <div><div class="chip-label">Location</div><div class="chip-value" id="locEl"></div></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-divider"></div>
+    <div class="footer-tagline">Play Together<span class="dot">•</span>Grow Together<span class="dot">•</span>Represent Together</div>
+    <div class="footer-handle" id="handleEl"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================================
+   ✎ EDIT ONLY THIS BLOCK
+   The number of days updates AUTOMATICALLY from today's date each time you
+   open this file. Just open it daily and screenshot / export.
+   (To force a number, set daysOverride, e.g. 12. Leave null for automatic.)
+   ============================================================================ */
+const CONFIG = {
+  eventType: "Internal Tournament",
+  eventTypeAccent: "Countdown",
+  tournamentLines: ["NDFC Dashain", "Tihar Cup"],
+  seasonLabel: "Season 4",
+
+  eventDate: "2026-11-22",          // YYYY-MM-DD
+  dateLabel: "Sunday, Nov 22",
+  location: "TBD",
+
+  startCountdownFrom: 30,           // dots bar length (days)
+  daysOverride: null,
+
+  ctaTitle: "Register Soon",
+  ctaSub: "to secure your spot",
+
+  // Logo (shown on top AND as background watermark). Put your logo file in the
+  // same folder as this HTML and name it NDFC_Official_Logo.png  -- or paste a full
+  // data:image/png;base64,... string here instead.
+  logo: "NDFC_Official_Logo.png",
+
+  socialHandle: "@nepaldallasfc  ·  Dallas, Texas"
+};
+/* ============================================================================ */
+
+const $ = id => document.getElementById(id);
+
+function daysLeft(){
+  if (CONFIG.daysOverride !== null) return CONFIG.daysOverride;
+  const [y,m,d] = CONFIG.eventDate.split('-').map(Number);
+  const now = new Date(); now.setHours(0,0,0,0);
+  return Math.round((new Date(y,m-1,d) - now) / 86400000);
+}
+
+function fitHeadline(lines){
+  const el = $('headlineEl'); el.innerHTML = '';
+  lines.forEach((t,i)=>{
+    const s = document.createElement('span');
+    s.className = 'h-line' + (i === lines.length-1 && lines.length>1 ? ' accent' : '');
+    s.textContent = t; el.appendChild(s);
+  });
+  let size = 108; el.style.fontSize = size+'px';
+  while (size > 60 && Math.max(...[...el.children].map(c=>c.scrollWidth)) > 960){ size -= 2; el.style.fontSize = size+'px'; }
+}
+
+function render(){
+  const c = CONFIG, n = Math.max(0, daysLeft());
+
+  const et = $('eventTypeEl'); et.textContent = c.eventType;
+  if (c.eventTypeAccent){ const a = document.createElement('span'); a.className='ann'; a.textContent=' '+c.eventTypeAccent; et.appendChild(a); }
+  fitHeadline(c.tournamentLines);
+  $('seasonEl').textContent = c.seasonLabel;
+
+  // countdown copy
+  let top = "The Wait Is Almost Over", banner = "Days to go";
+  if (n === 1){ banner = "Day to go"; top = "Get Your Boots Ready"; }
+  else if (n <= 3 && n > 1){ top = "Get Your Boots Ready"; }
+  else if (n <= 7 && n > 3){ top = "Final Week"; }
+  if (n === 0){ top = "The Day Is Here"; banner = "Match Day"; }
+  $('topEl').textContent = top;
+  $('bannerEl').textContent = banner;
+  const num = $('countNum');
+  num.textContent = n === 0 ? "GO" : String(n);
+  num.style.fontSize = (String(num.textContent).length >= 3 ? 300 : 390) + 'px';
+
+  // progress ticks
+  const total = Math.max(c.startCountdownFrom, n), t = $('ticksEl'); t.innerHTML = '';
+  for (let i = 0; i < total; i++){
+    const d = document.createElement('div');
+    const passed = i < total - n;
+    d.className = 'tick' + (passed ? ' on' : '') + (i === total - n && n>0 ? ' now' : '');
+    t.appendChild(d);
+  }
+  $('ticksLabelEl').textContent = n === 0 ? "See you on the pitch" : "";
+
+  $('dateEl').textContent = c.dateLabel;
+  const loc = $('locEl'); loc.textContent = c.location;
+  if (/^\s*(tbd|tba)\s*$/i.test(c.location)) loc.classList.add('tbd');
+  $('handleEl').textContent = c.socialHandle;
+
+  $('ctaTitleEl').textContent = c.ctaTitle;
+  $('ctaSubEl').textContent = c.ctaSub;
+
+  let saved = null;
+  setLogo(saved || c.logo);
+}
+
+function setLogo(src){
+  if (!src) return;
+  const img = new Image();
+  img.onload = () => {
+    ['logoEl','wmEl'].forEach(id => { $(id).src = src; $(id).style.display = 'block'; });
+    $('monoEl').style.display = 'none';
+  };
+  img.src = src;
+}
+// Double-click the logo / NDFC badge to choose your logo image once (remembered in this browser)
+const picker = document.createElement('input'); picker.type = 'file'; picker.accept = 'image/*';
+picker.onchange = () => {
+  const f = picker.files[0]; if (!f) return;
+  const fr = new FileReader();
+  fr.onload = () => { try { localStorage.setItem('ndfcLogo', fr.result); } catch(e){} setLogo(fr.result); };
+  fr.readAsDataURL(f);
+};
+['monoEl','logoEl'].forEach(id => $(id).addEventListener('dblclick', () => picker.click()));
+
+(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(render);
+</script>
+</body>
+</html>
